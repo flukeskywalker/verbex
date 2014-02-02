@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+Verbose Expressions
+===================
+Authors:
+Rupesh Kumar Srivastava (github.com/flukeskywalker)
+Nihat Engin Toklu (github.com/engintoklu)
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+        <title>VerbEx</title>
+        <script src="verbex.js"></script> 
+    </head>
+
+    <body>
+        <p><link href='http://fonts.googleapis.com/css?family=Ubuntu|Roboto+Slab:400,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" type="text/css" href="verbex.css" /></p>
+        <div class="page-part1">
+            <div class="main-title">
+                <h1>VerbEx: RegEx for the rest of us</h1>
+            </div>
+            <form name="form1" class="main-form">
+                <div class="main-text">
+                    What you want:<br>
+                    <textarea name="area1" rows="6" cols="60"></textarea><br>
+                </div>
+                <div class="submit-button">
+                    <input type="button" name="convert" value="Convert"
+                    onclick=button1_click()><br>
+                </div>
+                <br>
+                <br>
+                <div class="main-text-readonly">
+                    What you get:<br>
+                    <textarea readonly name="area2" rows="6" cols="60" style="background-color:whitesmoke"></textarea><br>
+                </div>
+                <br>
+                <br>
+            </form>
+        </div>
+        <br>
+        <br>
+        <div class="page-part2">
+            <form name="form2" class="main-form">
+                <div class="main-text">
+                    Test it:<br>
+                    <textarea name="area3" rows="6" cols="60"
+                        ></textarea><br>
+                    <div class="submit-button">
+                        <input type="button" name="test" value="Test"
+                        onclick=button2_click()><br>
+                    </div>
+                    <input name="text1" type="text">
+                </div>
+            </form>
+            <p>From <a href="http://github.com/flukeskywalker">S</a> & <a
+                href="http://github.com/engintoklu">T</a></p>
+        </div>
+    </body>
+</html>
