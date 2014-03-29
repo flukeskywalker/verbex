@@ -1,7 +1,7 @@
-#VerbEx 
-##a.k.a. Verbose Expressions
+#Verbose Expressions
 
-VerbEx is regex for the rest of us. 
+Verbose Expressions == regular expressions for the rest of us.
+
 It brings the power of regular expressions to everyone who can not remember the often abstract symbolism of various regex syntaxes. It provides an intuitive, expressive, general and easy to use regex syntax which is then converted to many desired regex syntaxes (GNU, Python, Vim). No need to memorise them all!
 
 ## Keywords:
