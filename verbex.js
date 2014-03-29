@@ -87,20 +87,26 @@ function tokenize(str)
             }
         }
     }
+
+    if (quotation != "")
+    {
+        throw "Unfinished quotation";
+    }
+
     addWord();
 
     return result;
 }
 
-var VerbexElementType = {literal:0, command:1};
+var VEElementType = {literal:0, command:1};
 
-function VerbexElement()
+function VEElement()
 {
-    this.type = VerbexElementType.literal;
+    this.type = VEElementType.literal;
     this.value = "";
     this.args = [];
 }
-VerbexElement.prototype.makeString = function() {
+VEElement.prototype.makeString = function() {
     if (this.args.length > 0)
     {
         var s = " ";
@@ -116,30 +122,73 @@ VerbexElement.prototype.makeString = function() {
         return "{" + this.type + " " + this.value + "}";
     }
 }
+VEElement.prototype.verifyArgCount = function(argcount, cmdname) {
+    if (this.args.length != argcount)
+    {
+        throw "The command '" + cmdname + "' expects " + argcount + " number of arguments, but has encountered " + this.args.length + " number of arguments";
+    }
+}
+
+VEElement.prototype.verifyMinArgCount = function(argcount, cmdname) {
+    if (this.args.length < argcount)
+    {
+        throw "The command '" + cmdname + "' expects at least " + argcount + " number of arguments, but has encountered " + this.args.length + " number of arguments";
+    }
+}
 
 function represent(tokenized)
 {
-    var result = new VerbexElement();
-    result.type = VerbexElementType.command;
+    var result = new VEElement();
+    result.type = VEElementType.command;
     result.value = tokenized[0];
 
     var subexp = [];
+    var bracketStack = [];
 
     var depth = 0;
     for (var i = 1; i < tokenized.length; i++)
     {
         var token = tokenized[i];
 
-        if (token == "(")
+        if (token == "(" || token == "[")
         {
+            bracketStack.push(token);
             if (depth >= 1)
             {
                 subexp.push("(");
+                if (token == "[")
+                {
+                    subexp.push("match");
+                }
             }
             depth += 1;
         }
-        else if (token == ")")
+        else if (token == ")" || token == "]")
         {
+            var popped;
+            var bracketOk = false;
+
+            if (bracketStack.length == 0)
+            {
+                throw "Mismatched parentheses";
+            }
+
+            popped = bracketStack.pop();
+
+            if (popped == "(" && token == ")")
+            {
+                bracketOk = true;
+            }
+            else if (popped == "[" && token == "]")
+            {
+                bracketOk = true;
+            }
+
+            if (!bracketOk)
+            {
+                throw "Mismatched parentheses";
+            }
+
             depth -= 1;
             if (depth == 0)
             {
@@ -158,7 +207,7 @@ function represent(tokenized)
         else
         {
             var o;
-            o = new VerbexElement();
+            o = new VEElement();
 
             var firstchar;
             firstchar = token.substring(0, 1);
@@ -166,16 +215,21 @@ function represent(tokenized)
             if (firstchar == "'" || firstchar == '"')
             {
                 token = token.substring(1, token.length - 1);
-                o.type = VerbexElementType.literal;
+                o.type = VEElementType.literal;
             }
             else
             {
-                o.type = VerbexElementType.command;
+                o.type = VEElementType.command;
             }
             o.value = token;
 
             result.args.push(o);
         }
+    }
+
+    if (bracketStack.length != 0)
+    {
+        throw "Unfinished expression";
     }
 
     return result;
@@ -230,63 +284,78 @@ function process(rep)
         }
     }
 
-    if (rep.type == VerbexElementType.command)
+    if (rep.type == VEElementType.command)
     {
         var cmd = rep.value;
         if (cmd == "match")
         {
             joinArgs("", 0);
         }
-        else if (cmd == "begin")
+        else if (cmd == "begin" || cmd == "^")
         {
+            rep.verifyArgCount(0, cmd);
             result += "^";
         }
-        else if (cmd == "end")
+        else if (cmd == "end" || cmd == "$")
         {
+            rep.verifyArgCount(0, cmd);
             result += "$";
+        }
+        else if (cmd == "\\n" || cmd == "\\r" || cmd == "\\t")
+        {
+            rep.verifyArgCount(0, cmd);
+            result += cmd;
         }
         else if (cmd == "anychar" || cmd == ".")
         {
+            rep.verifyArgCount(0, cmd);
             result += ".";
         }
         else if (cmd == "except")
         {
+            rep.verifyMinArgCount(1, cmd);
             result += "[^";
             joinArgs("", 0);
             result += "]";
         }
         else if (cmd == "range")
         {
+            rep.verifyArgCount(2, cmd);
             result += "[";
             joinArgs("-", 0);
             result += "]";
         }
-        else if (cmd == "optional" || cmd == "0-or-1" || cmd == "?")
+        else if (cmd == "optional" || cmd == "zero-or-one" || cmd == "?")
         {
-            result += "(";
+            rep.verifyMinArgCount(1, cmd);
+            result += "(?:";
             joinArgs("", 0);
             result += ")?";
         }
-        else if (cmd == "1-or-more" || cmd == "+")
+        else if (cmd == "one-or-more" || cmd == "+")
         {
-            result += "(";
+            rep.verifyMinArgCount(1, cmd);
+            result += "(?:";
             joinArgs("", 0);
             result += ")+";
         }
-        else if (cmd == "0-or-more" || cmd == "*")
+        else if (cmd == "zero-or-more" || cmd == "*")
         {
-            result += "(";
+            rep.verifyMinArgCount(1, cmd);
+            result += "(?:";
             joinArgs("", 0);
             result += ")*";
         }
         else if (cmd == "or" || cmd == "|")
         {
-            result += "(";
+            rep.verifyMinArgCount(1, cmd);
+            result += "(?:";
             joinArgs("|", 0);
             result += ")";
         }
         else if (cmd == "times")
         {
+            rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
             joinArgs("", 1);
@@ -294,6 +363,7 @@ function process(rep)
         }
         else if (cmd == "mintimes")
         {
+            rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
             joinArgs("", 1);
@@ -301,6 +371,7 @@ function process(rep)
         }
         else if (cmd == "minmaxtimes")
         {
+            rep.verifyMinArgCount(3, cmd);
             var n;
             n = rep.args[0].value;
             var m;
@@ -308,10 +379,14 @@ function process(rep)
             joinArgs("", 2);
             result += "{" + n + "," + m + "}";
         }
+        else
+        {
+            throw "Unknown command: " + cmd;
+        }
 
 
     }
-    else if (rep.type == VerbexElementType.literal)
+    else if (rep.type == VEElementType.literal)
     {
         result = escapedLiteral(rep.value);
     }
@@ -322,20 +397,30 @@ function process(rep)
 function button1_click()
 {
     var f = document.form1;
-    var arr = tokenize("match " + f.area1.value);
-    var rep = represent(arr);
 
-    //var result = "";
-    //for (var token in arr)
-    //{
-    //    result += arr[token] + "\n";
-    //}
+    try
+    {
+        var arr = tokenize("match " + f.area1.value);
+        var rep = represent(arr);
 
-    //f.area2.value = result;
+        //var result = "";
+        //for (var token in arr)
+        //{
+        //    result += arr[token] + "\n";
+        //}
 
-    //f.area2.value = represent(arr).makeString();
+        //f.area2.value = result;
 
-    f.area2.value = process(rep);
+        //f.area2.value = represent(arr).makeString();
+
+        //f.area2.value = process(rep);
+
+        f.area2.value = process(rep);
+    }
+    catch (e)
+    {
+        f.area2.value = "ERROR: " + e;
+    }
 }
 
 function button2_click()
