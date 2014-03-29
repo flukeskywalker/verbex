@@ -12,6 +12,20 @@ function isWhitespace(c)
     return (c == " " || c == "\t" || c == "\n" || c == "\r");
 }
 
+function looksLikeInteger(s)
+{
+    var p = new RegExp('^[0-9]+$');
+    return p.test(s);
+}
+
+function verifyItLooksLikeInteger(s, msgifnot)
+{
+    if (!looksLikeInteger(s))
+    {
+        throw msgifnot;
+    }
+}
+
 function tokenize(str)
 {
     var result = [];
@@ -293,6 +307,18 @@ function process(rep)
         {
             joinArgs("", 0);
         }
+        else if (cmd == "group")
+        {
+            result += "(";
+            joinArgs("", 0);
+            result += ")";
+        }
+        else if (cmd == "refer")
+        {
+            verifyItLooksLikeInteger(rep.args[0].value, "an integer must be specified as the first argument of 'refer', but '" + rep.args[0].value + "' was encountered.");
+            rep.verifyArgCount(1, cmd);
+            result += "\\" + rep.args[0].value;
+        }
         else if (cmd == "begin" || cmd == "^")
         {
             rep.verifyArgCount(0, cmd);
@@ -360,6 +386,7 @@ function process(rep)
             rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'times', but '" + n + "' was encountered.");
             joinArgs("", 1);
             result += "{" + n + "}";
         }
@@ -368,6 +395,7 @@ function process(rep)
             rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'mintimes', but '" + n + "' was encountered.");
             joinArgs("", 1);
             result += "{" + n + ",}";
         }
@@ -378,6 +406,10 @@ function process(rep)
             n = rep.args[0].value;
             var m;
             m = rep.args[1].value;
+
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'minmaxtimes', but '" + n + "' was encountered.");
+            verifyItLooksLikeInteger(m, "an integer must be specified as the second argument of 'minmaxtimes', but '" + m + "' was encountered.");
+
             joinArgs("", 2);
             result += "{" + n + "," + m + "}";
         }
