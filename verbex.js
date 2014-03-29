@@ -75,7 +75,7 @@ function tokenize(str)
                 quotation = c;
                 word = c;
             }
-            else if (c == "(" || c == ")")
+            else if (c == "(" || c == ")" || c == "[" || c == "]")
             {
                 addWord();
                 word = c;
@@ -156,11 +156,13 @@ function represent(tokenized)
             if (depth >= 1)
             {
                 subexp.push("(");
-                if (token == "[")
-                {
-                    subexp.push("match");
-                }
             }
+
+            if (token == "[")
+            {
+                subexp.push("match");
+            }
+
             depth += 1;
         }
         else if (token == ")" || token == "]")
