@@ -11,7 +11,7 @@ For many expressions, the GNU symbols are also valid in verbex, in case you reme
 
 `begin` -- match beginning of line or string (GNU: `^`)
 
-`end` -- match end of line of string (GNU: `^`)
+`end` -- match end of line of string (GNU: `$`)
 
 `anychar` -- match a single occurance of any character (GNU: `.`)
 
