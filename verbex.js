@@ -9,14 +9,34 @@ Nihat Engin Toklu (github.com/engintoklu)
 
 function isWhitespace(c)
 {
+    // returns true if c is a whitespace character
     return (c == " " || c == "\t" || c == "\n" || c == "\r");
+}
+
+function looksLikeInteger(s)
+{
+    // returns true if s is a string consisting only of digits
+    var p = new RegExp('^[0-9]+$');
+    return p.test(s);
+}
+
+function verifyItLooksLikeInteger(s, ex)
+{
+    // throws the exception ex if s is NOT a string consisting only of digits
+    if (!looksLikeInteger(s))
+    {
+        throw ex;
+    }
 }
 
 function tokenize(str)
 {
+    // tokenizes the string str
+    // returns an Array, containing the tokens
+
     var result = [];
 
-    var quotation = "";
+    var quotation = "";  // <- stores the quotation type ' or "
     var word = "";
 
     function addWord()
@@ -102,11 +122,19 @@ var VEElementType = {literal:0, command:1};
 
 function VEElement()
 {
+    // stores a verbose expression element
+
+    // type of the element (literal or command) :
     this.type = VEElementType.literal;
+
+    // string value of the literal, or the command name of the command:
     this.value = "";
+
+    // arguments (if this is a command), stored as an Array of VEElements:
     this.args = [];
 }
 VEElement.prototype.makeString = function() {
+    // returns the string representation of the VEElement object
     if (this.args.length > 0)
     {
         var s = " ";
@@ -122,7 +150,12 @@ VEElement.prototype.makeString = function() {
         return "{" + this.type + " " + this.value + "}";
     }
 }
+
 VEElement.prototype.verifyArgCount = function(argcount, cmdname) {
+    // throws an exception if the number of arguments of this VEElement
+    // object is not equal to argcount
+    // cmdname is the name of the command, to appear in the error message
+
     if (this.args.length != argcount)
     {
         throw "The command '" + cmdname + "' expects " + argcount + " number of arguments, but has encountered " + this.args.length + " number of arguments";
@@ -130,14 +163,22 @@ VEElement.prototype.verifyArgCount = function(argcount, cmdname) {
 }
 
 VEElement.prototype.verifyMinArgCount = function(argcount, cmdname) {
+    // throws an exception if the number of arguments of this VEElement
+    // object is less than argcount
+    // cmdname is the name of the command, to appear in the error message
+
     if (this.args.length < argcount)
     {
         throw "The command '" + cmdname + "' expects at least " + argcount + " number of arguments, but has encountered " + this.args.length + " number of arguments";
     }
 }
 
+
 function represent(tokenized)
 {
+    // takes an Array of tokens, and returns a VEElement
+    // representation of the verbose expression
+
     var result = new VEElement();
     result.type = VEElementType.command;
     result.value = tokenized[0];
@@ -256,6 +297,9 @@ var specialChars = "^$.[]-?+*(){}|\\";
 
 function escapedLiteral(s)
 {
+    // converts any special character c in string s into c+"\\"
+    // the special characters are listed in the string specialChars
+
     var result = "";
     for (var i = 0; i < s.length; i++)
     {
@@ -271,6 +315,9 @@ function escapedLiteral(s)
 
 function process(rep)
 {
+    // converts a VEElement (given as rep) into regular expression
+    // this is where we process the verbose expression commands
+
     var result = "";
 
     function joinArgs(sep, starti)
@@ -292,6 +339,18 @@ function process(rep)
         if (cmd == "match")
         {
             joinArgs("", 0);
+        }
+        else if (cmd == "group")
+        {
+            result += "(";
+            joinArgs("", 0);
+            result += ")";
+        }
+        else if (cmd == "refer")
+        {
+            verifyItLooksLikeInteger(rep.args[0].value, "an integer must be specified as the first argument of 'refer', but '" + rep.args[0].value + "' was encountered.");
+            rep.verifyArgCount(1, cmd);
+            result += "\\" + rep.args[0].value;
         }
         else if (cmd == "begin" || cmd == "^")
         {
@@ -360,6 +419,7 @@ function process(rep)
             rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'times', but '" + n + "' was encountered.");
             joinArgs("", 1);
             result += "{" + n + "}";
         }
@@ -368,6 +428,7 @@ function process(rep)
             rep.verifyMinArgCount(2, cmd);
             var n;
             n = rep.args[0].value;
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'mintimes', but '" + n + "' was encountered.");
             joinArgs("", 1);
             result += "{" + n + ",}";
         }
@@ -378,6 +439,10 @@ function process(rep)
             n = rep.args[0].value;
             var m;
             m = rep.args[1].value;
+
+            verifyItLooksLikeInteger(n, "an integer must be specified as the first argument of 'minmaxtimes', but '" + n + "' was encountered.");
+            verifyItLooksLikeInteger(m, "an integer must be specified as the second argument of 'minmaxtimes', but '" + m + "' was encountered.");
+
             joinArgs("", 2);
             result += "{" + n + "," + m + "}";
         }
