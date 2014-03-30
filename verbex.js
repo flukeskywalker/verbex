@@ -402,7 +402,8 @@ function button1_click()
 
     try
     {
-        var arr = tokenize("match " + f.area1.value);
+        // var arr = tokenize("match " + f.area1.value);
+        var arr = tokenize("match " + editor.getValue());
         var rep = represent(arr);
 
         //var result = "";
@@ -430,7 +431,7 @@ function button2_click()
     var f1 = document.form1;
     var f2 = document.form2;
     var re = new RegExp(f1.area2.value);
-    var a = re.exec(f2.area3.value);
+    var a = re.exec(testeditor.getValue());
     if (a != null)
     {
         var i = a.index;

@@ -12,6 +12,9 @@ Nihat Engin Toklu (github.com/engintoklu)
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
         <title>Verbose Expressions</title>
         <script src="verbex.js"></script> 
+        <script src="lib/codemirror.js"></script>
+        <link rel="stylesheet" href="lib/codemirror.css">
+        <script src="mode/javascript/javascript.js"></script>
     </head>
 
     <body>
@@ -34,17 +37,27 @@ Nihat Engin Toklu (github.com/engintoklu)
             <form name="form1" class="main-form">
                 <div class="main-text">
                     Enter Verbose Expression:<br>
-                    <textarea name="area1" rows="6" cols="60"></textarea><br>
+                    <textarea name="area1" id="area1" rows="6" cols="60"></textarea><br>
                 </div>
                 <div class="submit-button">
                     <input type="button" name="convert" value="Convert"
                     onclick=button1_click()><br>
                 </div>
+        <script language="JavaScript">
+            var editor =
+            CodeMirror.fromTextArea(document.getElementById("area1"), {
+                mode: "javascript",
+                autofocus: true,
+                smartIndent: false
+            });
+            editor.setSize(400, 200);
+        </script>
                 <br>
                 <br>
                 <div class="main-text-readonly">
                     Regular Expression:<br>
-                    <textarea readonly name="area2" rows="6" cols="60" style="background-color:whitesmoke"></textarea><br>
+                    <textarea readonly name="area2"
+                        style="height:80px; width:400px; background-color:whitesmoke"></textarea><br>
                 </div>
                 <br>
                 <br>
@@ -56,12 +69,21 @@ Nihat Engin Toklu (github.com/engintoklu)
             <form name="form2" class="main-form">
                 <div class="main-text">
                     Test it!<br>
-                    <textarea name="area3" rows="6" cols="60"
+                    <textarea name="area3" id="area3"
                         ></textarea><br>
                     <div class="submit-button">
                         <input type="button" name="test" value="Test"
                         onclick=button2_click()><br>
                     </div>
+        <script language="JavaScript">
+            var testeditor =
+            CodeMirror.fromTextArea(document.getElementById("area3"), {
+                mode: "javascript",
+                autofocus: true,
+                smartIndent: false
+            });
+            testeditor.setSize(400, 80);
+        </script>
                     <input name="text1" type="text">
                 </div>
             </form>
